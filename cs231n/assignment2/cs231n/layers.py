@@ -60,6 +60,9 @@ def affine_backward(dout, cache):
     ###########################################################################
     N = x.shape[0]
     x_reshpe = x.reshape(N, -1)
+    # print(x.shape)
+    # print(w.shape)
+    # print(dout.shape)
     dx = dout @ w.T
     dw = x_reshpe.T @ dout
     db = np.sum(dout, axis=0)
@@ -351,7 +354,12 @@ def layernorm_forward(x, gamma, beta, ln_param):
 
     Input:
     - x: Data of shape (N, D)
-    - gamma: Scale parameter of shape (D,)
+    - gamma: Scale parameter of shape (D,)D = x.shape[1]
+    # mean = np.mean(x, axis=1, keepdims=True)
+    # var = np.sum((x - mean)**2, axis=1, keepdims=True) / D
+    # x_hat = (x - mean) / np.sqrt(var + eps)
+    # out = gamma * x + beta
+    # cache = (x_hat, gamma, mean, var, eps, np.sqrt(var+eps), x)
     - beta: Shift paremeter of shape (D,)
     - ln_param: Dictionary with the following keys:
         - eps: Constant for numeric stability
@@ -372,7 +380,22 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # transformations you could perform, that would enable you to copy over   #
     # the batch norm code and leave it almost unchanged?                      #
     ###########################################################################
-    # 
+    D = x.shape[1]
+    mean = np.mean(x, axis=1, keepdims=True)
+    var = np.sum((x - mean)**2, axis=1, keepdims=True) / D
+    x_hat = (x - mean) / np.sqrt(var + eps)
+    out = gamma * x_hat + beta
+    cache = (x_hat, gamma, mean, var, eps, np.sqrt(var+eps), x)
+    # 想不改的话就先给x转置，然后再转置回来
+    # x = x.T
+    # N = x.shape[0]
+    # minibatch_mean = np.mean(x, axis=0, keepdims=True)
+    # minibatch_var = np.sum((x - minibatch_mean)**2, axis=0, keepdims=True) / N
+    # x_hat = (x - minibatch_mean) / np.sqrt(minibatch_var+eps)
+    # x = x.T
+    # x_hat = x_hat.T
+    # out = gamma * x_hat + beta
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -402,7 +425,17 @@ def layernorm_backward(dout, cache):
     # implementation of batch normalization. The hints to the forward pass    #
     # still apply!                                                            #
     ###########################################################################
-    # 
+    x_hat, gamma, mean, var, eps, std, x = cache
+    
+    D = dout.shape[1]
+    dgamma = np.sum(dout * x_hat, axis=0, keepdims=True)
+    dbeta = np.sum(dout, axis=0, keepdims=True)
+    dx_hat = dout * gamma #(N, D)
+
+    dvar = np.sum(dx_hat * (x - mean)*(-0.5)*((var + eps)**(-1.5)), axis=1, keepdims=True)
+    dmean = np.sum(dx_hat*(-1.0/std), axis=1, keepdims=True) + dvar*np.sum(-2*(x - mean),axis=1,keepdims=True)/D
+
+    dx = dx_hat*(1.0/std) + dvar * 2 *(x - mean) / D + dmean / D
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -444,7 +477,12 @@ def dropout_forward(x, dropout_param):
         # TODO: Implement training phase forward pass for inverted dropout.   #
         # Store the dropout mask in the mask variable.                        #
         #######################################################################
-        pass
+        # dropout是每个神经元都有p的概率被保留，所以每个位置上生成一个[0,1)之间的数，如果此数
+        # 小于p，则该位置应该被保留，否则应该舍弃；除以p是因为x要乘以mask，知道mask服从[0,1]分布
+        # 所以E(mask) = p，所以E(x * mask)=pE(x)，但是测试的时候期望是E(x),所以为了使
+        # 训练和测试的时候期望一样，这里除以p
+        mask = (np.random.rand(*x.shape) < p) / p
+        out = x * mask
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
@@ -452,7 +490,7 @@ def dropout_forward(x, dropout_param):
         #######################################################################
         # TODO: Implement the test phase forward pass for inverted dropout.   #
         #######################################################################
-        pass
+        out = x
         #######################################################################
         #                            END OF YOUR CODE                         #
         #######################################################################
@@ -478,7 +516,7 @@ def dropout_backward(dout, cache):
         #######################################################################
         # TODO: Implement training phase backward pass for inverted dropout   #
         #######################################################################
-        pass
+        dx = dout * mask
         #######################################################################
         #                          END OF YOUR CODE                           #
         #######################################################################
@@ -518,7 +556,28 @@ def conv_forward_naive(x, w, b, conv_param):
     # TODO: Implement the convolutional forward pass.                         #
     # Hint: you can use the function np.pad for padding.                      #
     ###########################################################################
-    # 
+    N, C, H, W = x.shape
+    F, _, HH, WW = w.shape
+    stride = conv_param['stride']
+    num_pad = conv_param['pad']
+    x_pad = np.pad(x, ((0, 0), (0, 0), (num_pad, num_pad), (num_pad, num_pad)), "constant")
+    H_ = int(1 + (H + 2 * num_pad - HH) / stride)
+    W_ = int(1 + (W + 2 * num_pad - WW) / stride)
+    
+    out = np.zeros((N, F, H_, W_))
+    
+    for i in range(N):
+      sample = x_pad[i:i+1]
+      sample_res = np.zeros(shape=(F, H_, W_))
+      for h_out in range(H_):
+        for w_out in range(W_):
+            #第 h_out 个响应对应的感受野的顶端坐标是沿高度方向从输入起始处往下移动了 h_out 个步长
+            h0 = h_out * stride
+            w0 = w_out * stride
+            receptive_field = sample[:, :, h0:h0+HH, w0:w0+WW]
+            conv_res = np.sum(receptive_field * w, axis=(1,2,3)) + b
+            sample_res[:, h_out, w_out] = conv_res
+      out[i] = sample_res     
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################

@@ -76,18 +76,20 @@ class FullyConnectedNet(object):
             if i == 1: 
                 self.params[f'W{i}'] = np.random.normal(0, weight_scale, (input_dim, hidden_dims[i-1]))
                 self.params[f'b{i}'] = np.zeros((hidden_dims[i-1]))
-            elif i == self.num_layers - 1:
-                self.params[f'W{i}'] = np.random.normal(0, weight_scale, (hidden_dims[i-2], num_classes))
-                self.params[f'b{i}'] = np.zeros((num_classes))
             else:
                 self.params[f'W{i}'] = np.random.normal(0, weight_scale, (hidden_dims[i-2], hidden_dims[i-1]))
                 self.params[f'b{i}'] = np.zeros((hidden_dims[i-1]))
             # print(f'W{i}: {self.params[f'W{i}'].shape}')
-        
+            # print(f'b{i}: {self.params[f'b{i}'].shape}')
+        self.params[f'W{self.num_layers}'] = np.random.normal(0, weight_scale, (hidden_dims[self.num_layers-2], num_classes))
+        self.params[f'b{self.num_layers}'] = np.zeros((num_classes))
+        # print(f'W{self.num_layers}: {self.params[f'W{self.num_layers}'].shape}')
+        # print(f'b{self.num_layers}: {self.params[f'b{self.num_layers}'].shape}')
         if self.normalization == "batchnorm" or self.normalization == "layernorm":
-           for i in range(1, self.num_layers-1):
+           for i in range(1, self.num_layers):
               self.params[f'gamma{i}'] = np.ones(hidden_dims[i-1])
               self.params[f'beta{i}'] = np.zeros(hidden_dims[i-1])
+              print(f"gamma{i}:{self.params[f'gamma{i}'].shape}")
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -108,9 +110,9 @@ class FullyConnectedNet(object):
         # pass of the second batch normalization layer, etc.
         self.bn_params = []
         if self.normalization == "batchnorm":
-            self.bn_params = [{"mode": "train"} for i in range(self.num_layers - 1)]
+            self.bn_params = [{"mode": "train"} for i in range(self.num_layers-1)]
         if self.normalization == "layernorm":
-            self.bn_params = [{} for i in range(self.num_layers - 1)]
+            self.bn_params = [{} for i in range(self.num_layers-1)]
 
         # Cast all parameters to the correct datatype.
         for k, v in self.params.items():
@@ -136,6 +138,7 @@ class FullyConnectedNet(object):
         - grads: Dictionary with the same keys as self.params, mapping parameter
             names to gradients of the loss with respect to those parameters.
         """
+        
         X = X.astype(self.dtype)
         mode = "test" if y is None else "train"
 
@@ -143,9 +146,10 @@ class FullyConnectedNet(object):
         # behave differently during training and testing.
         if self.use_dropout:
             self.dropout_param["mode"] = mode
-        if self.normalization == "batchnorm":
+        if self.normalization == "batchnorm" or self.normalization == "layernorm":
             for bn_param in self.bn_params:
                 bn_param["mode"] = mode
+        
         scores = None
         ############################################################################
         # TODO: Implement the forward pass for the fully connected net, computing  #
@@ -160,7 +164,7 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         caches = {}
-        for i in range(1, self.num_layers-1):
+        for i in range(1, self.num_layers):
             if i == 1:
                 scores, cache_affine = affine_forward(X, self.params[f'W{i}'], self.params[f'b{i}'])
             else:
@@ -179,9 +183,11 @@ class FullyConnectedNet(object):
             if self.use_dropout:
                scores, cache_droupout = dropout_forward(scores, self.dropout_param)
                caches[f'droupout{i}'] = cache_droupout
-
-        scores, cache_affine = affine_forward(scores, self.params[f'W{self.num_layers-1}'], self.params[f'b{self.num_layers-1}'])
-        caches[f'affine{self.num_layers-1}'] = cache_affine
+            
+        # print(self.params[f'W{self.num_layers}'].shape, self.params[f'b{self.num_layers}'].shape)
+        # print(scores.shape)
+        scores, cache_affine = affine_forward(scores, self.params[f'W{self.num_layers}'], self.params[f'b{self.num_layers}'])
+        caches[f'affine{self.num_layers}'] = cache_affine
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -220,13 +226,13 @@ class FullyConnectedNet(object):
         dx = dx / N
 
         # {affine - [batch/layer norm] - relu - [dropout]} x (L - 1) - affine - softmax
-        dx, grads[f'W{self.num_layers-1}'], grads[f'b{self.num_layers-1}'] = affine_backward(dx, caches[f'affine{self.num_layers-1}'])
-        grads[f'W{self.num_layers-1}'] += self.reg * self.params[f'W{self.num_layers-1}']
+        dx, grads[f'W{self.num_layers}'], grads[f'b{self.num_layers}'] = affine_backward(dx, caches[f'affine{self.num_layers}'])
+        grads[f'W{self.num_layers}'] += self.reg * self.params[f'W{self.num_layers}']
 
-        loss = loss / N + 0.5 * self.reg * np.sum(self.params[f'W{self.num_layers-1}'] * self.params[f'W{self.num_layers-1}'])
+        loss = loss / N + 0.5 * self.reg * np.sum(self.params[f'W{self.num_layers}'] * self.params[f'W{self.num_layers}'])
                                             
 
-        for i in range(self.num_layers-2, 0, -1):
+        for i in range(self.num_layers-1, 0, -1):
             loss = loss + 0.5 * self.reg * np.sum(self.params[f'W{i}'] * self.params[f'W{i}'])
             if self.use_dropout:
                 dx = dropout_backward(dx, caches[f'droupout{i}'])
