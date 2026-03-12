@@ -1,0 +1,13 @@
+1. jieba库分词与词性标注的函数
+2. 关于模型优化过程：
+一般是先optimizer.zero_grad()  清除上一轮的梯度
+然后loss.backward()  计算这一轮的梯度
+然后 optimizer.step()  更新优化器参数
+
+如果是梯度累积下：
+则每个step都计算loss.backward，计算梯度
+只当%acc_steps == 0时，才先更新优化器参数optimizer.step()，再梯度清0
+
+3. 标准正余弦编码，同一对奇偶项共享同一个频率（同一个分母）
+
+4.torch.autograd.functional.hessian()可直接计算hessian矩阵
