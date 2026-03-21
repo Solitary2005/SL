@@ -1,3 +1,36 @@
+第一部分  数据预处理
+1. 删除 df_clean 中的完全重复的行 
+    df_clean.drop_duplicates(inplace=True)
+2. 判断col列特征是数值类型还是属性类型
+    from pandas.api.types import is_numeric_dtype, is_object_dtype
+    is_numeric_dtype(df_clean[col])
+3. 按范围过滤是直接取索引
+    df_out[(df_out[column] >= lower) & (df_out[column] <= upper)]
+4. 标准化与归一化
+    from sklearn.preprocessing import MinMaxScaler, StandardScaler
+    if method == 'zscore':
+        X_scaled = StandardScaler().fit_transform(X=X)
+    elif method=='minmax':
+        X_scaled = MinMaxScaler().fit_transform(X=X)
+5. 正则去噪常用模板
+    https?://\S+      匹配一个完整的 URL
+    @\S+              匹配 @ 开头、后面跟着非空白字符，就是 @用户名。
+    #\S+              匹配 # 开头的话题。
+    【|】|！           直接列出要删除的特殊符号，用 | 隔开。
+6.  jieba分词 
+    # 精确模式
+    seg_list = jieba.cut("他来到上海交通大学", cut_all=False)
+    print("【精确模式】： " + "/ ".join(seg_list))
+
+    # 全模式
+    seg_list = jieba.cut("他来到上海交通大学", cut_all=True)
+    print("【全模式】： " + "/ ".join(seg_list))
+
+    # 搜索引擎模式
+    seg_list = jieba.cut_for_search("他毕业于上海交通大学机电系，后来在一机部上海电器科学研究所工作")
+    print("【搜索引擎模式】： " + "/ ".join(seg_list))
+
+
 1. jieba库分词与词性标注的函数
 2. 关于模型优化过程：
 一般是先optimizer.zero_grad()  清除上一轮的梯度

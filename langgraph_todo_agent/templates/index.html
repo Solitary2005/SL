@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>复习日程助手</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body data-logged-in="{{ '1' if logged_in else '0' }}">
+  <div class="bg-shape shape-a"></div>
+  <div class="bg-shape shape-b"></div>
+
+  <main class="container">
+    <header class="topbar">
+      <h1>复习日程助手</h1>
+      {% if logged_in %}
+      <div class="user-box">
+        <span>已登录: {{ user_name }}</span>
+        <button id="logoutBtn">退出</button>
+      </div>
+      {% else %}
+      <a class="login-btn" href="/auth/login">使用 Microsoft 登录</a>
+      {% endif %}
+    </header>
+
+    <section class="tips">
+      <p>示例: 把下周三的高数复习移动到周五晚间，并且分两次完成。</p>
+      <p>示例: 新增任务 英语阅读，明晚8点截止，提前30分钟提醒，备注做两篇真题。</p>
+    </section>
+
+    <section id="chatPanel" class="chat-panel">
+      <div id="messages" class="messages"></div>
+      <div class="input-row">
+        <input id="messageInput" type="text" placeholder="输入你的复习计划指令..." />
+        <button id="sendBtn">发送</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

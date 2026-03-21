@@ -15,7 +15,6 @@ def create_sinusoidal_pos_embedding(time, dimension, min_period=4e-3, max_period
     """
     half_dim = dimension // 2
     device = time.device
-    # 基于 pi0 实现的逻辑
     # Step0: 频率计算
     # 线性插值
     fraction = torch.linspace(0.0, 1.0, half_dim, dtype=torch.float32, device=device)
@@ -52,7 +51,7 @@ class Pi0ActionExpert(nn.Module):
             nn.Linear(hidden_dim, hidden_dim)
         )
         
-        # 简化的 Transformer 或 MLP 骨架，用于处理 [B, H, hidden_dim]
+        # 简化的模型骨架，用于处理 [B, H, hidden_dim]
         self.net = nn.Sequential(
             nn.Linear(hidden_dim*2 + cond_dim, hidden_dim * 2),
             nn.SiLU(),
@@ -87,7 +86,6 @@ class Pi0ActionExpert(nn.Module):
         h = self.net(feat)
         return self.action_out_proj(h) # [B, H, action_dim]
 
-# ================= 学生实操部分 =================
 
 def sample_time(bsize, device):
     """
