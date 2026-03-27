@@ -6,18 +6,20 @@
     is_numeric_dtype(df_clean[col])
 3. 按范围过滤是直接取索引
     df_out[(df_out[column] >= lower) & (df_out[column] <= upper)]
-4. 标准化与归一化
+4. 计算每列的缺失率
+    missing_rate = df.isnull().mean()
+5. 标准化与归一化
     from sklearn.preprocessing import MinMaxScaler, StandardScaler
     if method == 'zscore':
         X_scaled = StandardScaler().fit_transform(X=X)
     elif method=='minmax':
         X_scaled = MinMaxScaler().fit_transform(X=X)
-5. 正则去噪常用模板
+6. 正则去噪常用模板
     https?://\S+      匹配一个完整的 URL
     @\S+              匹配 @ 开头、后面跟着非空白字符，就是 @用户名。
     #\S+              匹配 # 开头的话题。
     【|】|！           直接列出要删除的特殊符号，用 | 隔开。
-6.  jieba分词 
+7.  jieba分词 
     # 精确模式
     seg_list = jieba.cut("他来到上海交通大学", cut_all=False)
     print("【精确模式】： " + "/ ".join(seg_list))

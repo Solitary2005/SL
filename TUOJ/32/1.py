@@ -29,3 +29,34 @@
 
 # for t in res:
 #     print(t)
+
+import sys
+input = sys.stdin.readline
+
+n, m = map(int, input().split())
+
+all_code = []
+res = [0] * n
+
+for i in range(n):
+    code_i = list(map(int, input().split()))
+    all_code.append(code_i)
+
+for i, code in enumerate(all_code):
+    min_idx = None
+    for j in range(len(all_code)):
+        if j == i:
+            continue
+        ok = True
+        for c in range(m):
+            if all_code[j][c] <= code[c]:
+                ok = False
+                break
+        if ok:
+            if min_idx is None or j < min_idx:
+                min_idx = j
+    if min_idx is not None:
+        res[i] = min_idx + 1
+
+for t in res:
+    print(t)
