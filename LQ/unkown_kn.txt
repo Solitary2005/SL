@@ -32,6 +32,17 @@
     seg_list = jieba.cut_for_search("他毕业于上海交通大学机电系，后来在一机部上海电器科学研究所工作")
     print("【搜索引擎模式】： " + "/ ".join(seg_list))
 
+8. 关于数据读写：
+    (1) .pkl应使用pickle库
+        import pickle
+        # 读取.pkl文件
+        with open('file.pkl', 'rb') as f:  # 'rb'表示以二进制读取
+            data = pickle.load(f)
+   (2) .json文件的读写
+   (3) pandas.DataFrame的读写
+        可指定分隔符(这里是;)，可指定是否保留行索引(这里是不保留)
+        df.to_csv(file_path, sep=';', index=False)
+
 
 1. jieba库分词与词性标注的函数
 2. 关于模型优化过程：
