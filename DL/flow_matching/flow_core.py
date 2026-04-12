@@ -165,6 +165,10 @@ def sample_actions(model, cond, action_dim, horizon, num_steps=10):
     # while time >= -dt / 2:
     #   v_t = model(x_t, cond, t)
     #   x_t = x_t + dt * v_t
+    # NOTE：
+    # 最近学常微分方程的数值解法，对于步长的选择
+    # 这里之所以设置 dt = -1.0 / num_steps
+    # 是因为在这个条件下，Euler 方法是稳定的，能够保证数值解的收敛性
     # ================================================================ #
     x_t = None
 

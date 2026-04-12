@@ -38,6 +38,9 @@
         # 读取.pkl文件
         with open('file.pkl', 'rb') as f:  # 'rb'表示以二进制读取
             data = pickle.load(f)
+        # 保存.pkl文件
+        with open(dist, 'wb') as file:  # 'wb'表示以二进制写入
+            pickle.dump(model, file)
    (2) .json文件的读写
    (3) pandas.DataFrame的读写
         可指定分隔符(这里是;)，可指定是否保留行索引(这里是不保留)
