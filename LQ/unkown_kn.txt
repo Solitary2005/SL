@@ -32,6 +32,14 @@
     seg_list = jieba.cut_for_search("他毕业于上海交通大学机电系，后来在一机部上海电器科学研究所工作")
     print("【搜索引擎模式】： " + "/ ".join(seg_list))
 
+    # jieba.lcut
+    import jieba
+    sentence = "结巴分词是Python中的一个重要工具"
+    words = jieba.lcut(sentence)
+    print(words)
+    输出结果将是一个包含分词结果的列表：
+    ['结巴', '分词', '是', 'Python', '中', '的', '一个', '重要', '工具']
+
 8. 关于数据读写：
     (1) .pkl应使用pickle库
         import pickle
@@ -45,6 +53,43 @@
    (3) pandas.DataFrame的读写
         可指定分隔符(这里是;)，可指定是否保留行索引(这里是不保留)
         df.to_csv(file_path, sep=';', index=False)
+
+第二部分 word2Vec model
+获取word的词向量表示：W2V_MODEL.wv[word]
+import jieba
+import numpy as np
+from gensim.models import Word2Vec
+from sklearn.metrics.pairwise import cosine_similarity
+
+w2v_file_path = "word2vec_model.bin"
+W2V_MODEL= Word2Vec.load(w2v_file_path)
+W2V_SIZE = 100
+
+def get_w2v(word):
+    try:
+        return W2V_MODEL.wv[word]
+    except KeyError:
+        return None
+
+第三部分 可视化部分
+使用matplotlib绘图：
+散点（区分颜色）并 添加colorbar
+def visualize_2d(ip_vectors_2d: np.ndarray, labels: np.ndarray, title: str, xlabel: str, ylabel: str) -> plt.Figure:
+    fig = plt.figure(figsize=(8, 6))
+    plt.scatter(
+        ip_vectors_2d[:,0],
+        ip_vectors_2d[:,1],
+        c=labels,
+        cmap='viridis',
+    )
+    cbar = plt.colorbar()
+    cbar.set_label("Class Labels")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+
+    return fig
+折线（区分颜色）
 
 
 1. jieba库分词与词性标注的函数
@@ -60,3 +105,10 @@
 3. 标准正余弦编码，同一对奇偶项共享同一个频率（同一个分母）
 
 4.torch.autograd.functional.hessian()可直接计算hessian矩阵
+
+
+常考的几个工具库：
+pandas
+sklearn
+open-cv
+matplotlib
